@@ -1,20 +1,40 @@
-name: Build
+name: Análise SonarCloud
+
 on:
   push:
     branches:
       - main
   pull_request:
-    types: [opened, synchronize, reopened]
+    branches:
+      - main
+
 jobs:
-  sonarqube:
-    name: SonarQube
-    runs-on: windows-latest
+  sonarcloud:
+    runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v4
+      # Checkout do código
+      - name: Checkout do código
+        uses: actions/checkout@v3
+
+      # Configurar JDK (necessário para o Sonar Scanner)
+      - name: Configurar JDK
+        uses: actions/setup-java@v3
         with:
-          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
-      - name: SonarQube Scan
-        uses: SonarSource/sonarqube-scan-action@v4
+          java-version: '11'
+          distribution: 'temurin'
+
+      # Rodar o SonarCloud Scanner
+      - name: Rodar SonarCloud Scanner
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          curl -sL https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.8.0.2856-linux.zip -o sonar-scanner.zip
+          unzip sonar-scanner.zip
+          sonar-scanner-*/bin/sonar-scanner \
+            -Dsonar.projectKey=Costanza22_back-cloud \
+            -Dsonar.organization=Costanza22 \
+            -Dsonar.sources=. \
+            -Dsonar.host.url=https://sonarcloud.io \
+            -Dsonar.login=$SONAR_TOKEN
+
